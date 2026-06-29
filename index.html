@@ -1,0 +1,389 @@
+<!--
+  ===================================================
+  ASSETS (all in  img/  next to this file, transparent PNG):
+
+    OBJECTS (4 floating now — About moved to the microwave):
+      img/broadcast.png   img/gyal.png   img/jogak.png   img/languages.png
+      (placeholder img/title.png is used until you swap each src)
+
+    MICROWAVE (two PNGs, SAME 1000x1000 canvas so they line up):
+      img/microwave-off.png   ← idle
+      img/microwave-on.png    ← heating (glowing window)
+      The microwave itself is now CLICKABLE → opens about.html
+
+  CHANGES IN THIS VERSION:
+    - About Me is reached by clicking the MICROWAVE (no separate float object).
+    - Tagline "i make warm versions of cold tools!" moved up + black.
+    - Labels float together with each object (no longer hover-only popups).
+    - Help button moved to bottom-right.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>yeon's microwave</title>
+
+<style>
+  /* ---------- 1. DESIGN TOKENS ---------- */
+  :root {
+    --bg: #fdfbf7;            /* beige-white */
+    --ink: #2b2b2b;
+    --float-distance: 18px;
+    --heat-seconds: 1.8s;
+    --mw-width: 300px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+    font-family: ui-rounded, "Hiragino Maru Gothic Pro", "Apple SD Gothic Neo", sans-serif;
+    color: var(--ink);
+    overflow: hidden;
+    /* CUSTOM CURSOR — add img/cursor.png later (recommended ~32x32 or 48x48 px).
+       The numbers after the url are the hotspot (where the actual "click point"
+       is, in px from the top-left of the image). Adjust if your cursor's tip
+       isn't at the top-left. The trailing keyword (auto/pointer) is the
+       fallback if the image is missing, so nothing breaks before you add it. */
+    cursor: url('img/cursor.png') 0 0, auto;
+  }
+
+
+  /* ---------- 2. STAGE ---------- */
+  .stage {
+    position: relative;
+    width: min(92vw, 720px);
+    height: min(92vw, 720px);
+    perspective: 900px;
+  }
+
+  /* ---------- 3. MICROWAVE (clickable → About Me) ---------- */
+  .microwave {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: var(--mw-width);
+    cursor: pointer;                 
+    transition: transform .2s ease;
+  }
+  .microwave:hover { transform: translate(-50%, -50%) scale(1.03); }
+  .microwave img { width: 100%; height: auto; display: block; }
+  .microwave .mw-on {
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity .35s ease;
+  }
+  .microwave.heating .mw-on { opacity: 1; }
+  /* CSS-glow fallback if microwave-on.png is missing (no flicker now) */
+  .microwave.use-css-glow.heating::after {
+    content: ""; position: absolute; left: 14%; top: 26%;
+    width: 46%; height: 46%; border-radius: 10px;
+    background: radial-gradient(circle at 50% 60%, #ffd27a, #e8893f);
+    box-shadow: 0 0 26px #ffb86b; opacity: .85;
+  }
+  /* status text OVER the microwave window while heating */
+  .mw-status {
+    position: absolute;
+    left: 31%; top: 50%;               /* centered over the glass window */
+    transform: translate(-50%, -50%);
+    font-size: 22px; font-weight: 700;
+    color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.5);
+    opacity: 0; transition: opacity .2s ease;
+    pointer-events: none; white-space: nowrap;
+  }
+  .microwave.heating .mw-status { opacity: 1; }
+
+  /* "About me" label under the microwave — HOVER ONLY now */
+  .mw-label {
+    position: absolute; left: 50%; top: 0%;
+    transform: translateX(-50%);
+    font-size: 14px; color: var(--ink); white-space: nowrap;
+    background: #fff; padding: 3px 12px; border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+    opacity: 0; transition: opacity .2s ease;
+    pointer-events: none;
+  }
+  .microwave:hover .mw-label { opacity: 1; }
+
+  /* ---------- 4. FLOATING OBJECTS ---------- */
+  .object {
+    position: absolute;
+    width: 96px; height: 96px;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transform-style: preserve-3d;
+  }
+  /* art + label share one bobbing wrapper so they float together */
+  .object .floatwrap {
+    animation: bob var(--dur, 4s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    will-change: transform;
+  }
+  .object .art {
+    width: 100%; height: 100%;
+    transition: transform .25s ease;
+  }
+  .object .art img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(calc(var(--float-distance) * -1)); }
+  }
+
+  /* label shows on HOVER only, and floats with the object */
+  .object .label {
+    position: absolute;
+    left: 50%; top: -24px;
+    transform: translateX(-50%);
+    font-size: 13px; white-space: nowrap; color: var(--ink);
+    background: #fff; padding: 2px 10px; border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+    opacity: 0; transition: opacity .2s ease;
+    pointer-events: none;
+  }
+  .object:hover .label { opacity: 1; }
+
+  /* moving floor shadow (does NOT bob — stays on the floor) */
+  .object .shadow {
+    position: absolute;
+    left: 50%; bottom: -34px;
+    width: 60px; height: 14px;
+    background: rgba(0,0,0,.16);
+    border-radius: 50%;
+    filter: blur(3px);
+    transform: translateX(-50%);
+    animation: shadowPulse var(--dur, 4s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes shadowPulse {
+    0%, 100% { transform: translateX(-50%) scale(1);  opacity: .26; }
+    50%      { transform: translateX(-50%) scale(.7); opacity: .12; }
+  }
+
+  .object:hover .art { transform: scale(1.12); }
+
+  /* ---------- 5. TAGLINE (below the microwave) ---------- */
+  .tagline {
+    position: absolute;
+    left: 50%; top: calc(50% + var(--mw-width) * 0.42);  /* just under the microwave */
+    transform: translateX(-50%);
+    font-size: 17px; color: #000;
+    letter-spacing: .01em;
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* ---------- 6. HELP BUTTON + PANEL (bottom-right) ---------- */
+  .help-btn {
+    position: fixed; bottom: 50px; right: 50px;   /* moved to bottom-right */
+    width: 46px; height: 46px;
+    border: none; background: transparent;
+    cursor: pointer; padding: 0;
+    transition: transform .2s ease;
+    z-index: 20;
+  }
+  .help-btn:hover { transform: scale(1.1) rotate(-6deg); }
+  .help-btn img { width: 150%; height: 150%; object-fit: contain; }
+  .help-btn.no-img {
+    background: #2b2b2b; color: #fff; border-radius: 50%;
+    font-size: 22px; font-weight: 700;
+  }
+
+  .help-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.35);
+    display: grid; place-items: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s ease;
+    z-index: 30;
+  }
+  .help-overlay.open { opacity: 1; pointer-events: auto; }
+  .help-card {
+    background: #fff; border-radius: 20px;
+    padding: 32px 30px; max-width: 340px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.2);
+    transform: scale(.92); transition: transform .25s ease;
+    text-align: left;
+  }
+  .help-overlay.open .help-card { transform: scale(1); }
+  .help-card h2 { margin: 0 0 16px; font-size: 22px; }
+  .help-card .row { display: flex; gap: 12px; align-items: flex-start; margin: 14px 0; }
+  .help-card .row .k {
+    flex: none; font-size: 13px; font-weight: 700;
+    background: #f0ece4; padding: 4px 10px; border-radius: 8px; white-space: nowrap;
+  }
+  .help-card .row .v { font-size: 14px; line-height: 1.5; color: #444; }
+  .help-card .close {
+    margin-top: 20px; width: 100%;
+    border: none; background: #2b2b2b; color: #fff;
+    padding: 11px; border-radius: 12px; font-size: 14px; cursor: pointer;
+  }
+
+  /* ---------- 7. ACCESSIBILITY ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .object .floatwrap, .object .shadow, .microwave .mw-on, .mw-label { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <!-- MICROWAVE: clickable, opens About Me -->
+  <div class="microwave" id="microwave" data-target="about">
+    <img class="mw-off" src="img/microwave-off.png" alt="">
+    <img class="mw-on"  src="img/microwave-on.png"  alt="" id="mwOn">
+    <span class="mw-status" id="mwStatus"></span>
+    <span class="mw-label">about me</span>
+  </div>
+
+  <!-- 4 floating objects (About removed; it's the microwave now) -->
+   <!--
+  <div class="object" style="left:18%; top:26%; --dur:4.2s; --delay:0s" data-target="broadcast">
+    <div class="floatwrap">
+      <span class="label">media works</span>
+      <div class="art"><img src="img/tv.png" alt="Broadcast work"></div>
+    </div>
+    <div class="shadow"></div>
+  </div>
+
+  <div class="object" style="left:30%; top:82%; --dur:3.6s; --delay:.6s" data-target="gyal">
+    <div class="floatwrap">
+      <span class="label">gyal</span>
+      <div class="art"><img src="img/egg.png" alt="gyal character IP"></div>
+    </div>
+    <div class="shadow"></div>
+  </div>
+
+  <div class="object" style="left:9%; top:64%; --dur:4.8s; --delay:.3s" data-target="jogak">
+    <div class="floatwrap">
+      <span class="label">jogak</span>
+      <div class="art"><img src="img/jogak.png" alt="JOGAK brand"></div>
+    </div>
+    <div class="shadow"></div>
+  </div>
+
+  <div class="object" style="left:40%; top:10%; --dur:4.0s; --delay:.9s" data-target="languages">
+    <div class="floatwrap">
+      <span class="label">interpretation</span>
+      <div class="art"><img src="img/mic.png" alt="Interpretation work"></div>
+    </div>
+    <div class="shadow"></div>
+  </div>
+-->
+  <div class="object" style="left:85%; top:20%; --dur:3.9s; --delay:.45s" data-target="ant">
+    <div class="floatwrap">
+      <span class="label">ant</span>
+      <div class="art"><img src="img/ant.png" alt="ant"></div>
+    </div>
+    <div class="shadow"></div>
+  </div>
+</div>
+
+<!-- HELP button (bottom-right). Uses img/title.png as placeholder — swap for your real help icon. -->
+<button class="help-btn" id="helpBtn" aria-label="도움말 / Help">
+  <img src="img/help.png" alt="" id="helpImg">
+</button>
+
+<div class="help-overlay" id="helpOverlay">
+  <div class="help-card">
+    <h2>how to use</h2>
+    <div class="row">
+      <span class="k">Click</span>
+      <span class="v"> Click a floating object (or the microwave) — it heats up, then opens.</span>
+    </div>
+    <div class="row">
+      <span class="k">Double-click</span>
+      <span class="v">In a hurry? Double-click to skip straight in.</span>
+    </div>
+    <button class="close" id="helpClose">got it!</button>
+  </div>
+</div>
+
+<script>
+  const stage  = document.getElementById('stage');
+  const mw     = document.getElementById('microwave');
+  const mwOn   = document.getElementById('mwOn');
+  const mwStatus = document.getElementById('mwStatus');
+
+  // microwave-on.png missing → CSS glow fallback
+  mwOn.addEventListener('error', () => { mwOn.style.display = 'none'; mw.classList.add('use-css-glow'); });
+
+  // help.png missing → "?" circle
+  const helpImg = document.getElementById('helpImg');
+  helpImg.addEventListener('error', () => {
+    const btn = document.getElementById('helpBtn');
+    btn.classList.add('no-img'); btn.textContent = '?';
+  });
+
+  // help panel
+  const helpOverlay = document.getElementById('helpOverlay');
+  document.getElementById('helpBtn').addEventListener('click', () => helpOverlay.classList.add('open'));
+  document.getElementById('helpClose').addEventListener('click', () => helpOverlay.classList.remove('open'));
+  helpOverlay.addEventListener('click', e => { if (e.target === helpOverlay) helpOverlay.classList.remove('open'); });
+
+  // mouse-follow tilt
+  stage.addEventListener('pointermove', e => {
+    const r = stage.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width  - .5;
+    const py = (e.clientY - r.top)  / r.height - .5;
+    document.querySelectorAll('.object .art').forEach(art => {
+      art.style.transform = `rotateY(${px * 16}deg) rotateX(${-py * 16}deg)`;
+    });
+  });
+  stage.addEventListener('pointerleave', () => {
+    document.querySelectorAll('.object .art').forEach(a => a.style.transform = '');
+  });
+
+  // ding (Web Audio)
+  let audioCtx = null;
+  function playDing() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = 880;
+      o.connect(g); g.connect(audioCtx.destination);
+      const t = audioCtx.currentTime;
+      g.gain.setValueAtTime(.0001, t);
+      g.gain.exponentialRampToValueAtTime(.4, t + .01);
+      g.gain.exponentialRampToValueAtTime(.0001, t + .9);
+      o.start(t); o.stop(t + .9);
+    } catch (e) { console.warn('ding failed:', e); }
+  }
+
+  // click = heat; double-click = skip. Works for objects AND the microwave.
+  let busy = false;
+  function wire(el) {
+    const target = el.dataset.target;
+    el.addEventListener('click', () => {
+      if (busy) return;
+      busy = true;
+      const ms = parseFloat(getComputedStyle(document.documentElement)
+                   .getPropertyValue('--heat-seconds')) * 1000;
+      mw.classList.add('heating');
+      el._timer = setTimeout(() => finish(target), ms);
+    });
+    el.addEventListener('dblclick', () => finish(target));
+  }
+  document.querySelectorAll('.object').forEach(wire);
+  wire(mw);   // microwave is clickable too → About Me
+
+  function finish(target) {
+    document.querySelectorAll('.object').forEach(o => clearTimeout(o._timer));
+    clearTimeout(mw._timer);
+    playDing();
+    setTimeout(() => {
+      mw.classList.remove('heating');
+      window.location.href = target + '.html';
+    }, 500);
+  }
+</script>
+</body>
+</html>

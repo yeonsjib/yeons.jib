@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Do you wanna get to know me? — Microwave</title>
+<style>
+  :root {
+    --bg: #fdfbf7;       
+    --ink: #2b2b2b;
+    --muted: #00000066;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-rounded, "Apple SD Gothic Neo", sans-serif;
+    line-height: 1.6;
+    /* custom cursor — add img/cursor.png later; falls back to auto if missing */
+    cursor: url('img/cursor.png') 4 4, auto;
+  }
+  /* return-to-hub: only exit is back through the microwave */
+  .home {
+    position: fixed; top: 22px; left: 22px;
+    width: 56px; height: 56px;
+    display: grid; place-items: center;
+    text-decoration: none;
+    transition: transform .2s ease; z-index: 10;
+  }
+  .home { cursor: url('img/cursor.png') 4 4, pointer; }
+  .home:hover { transform: scale(1.08); }
+  .home img { width: 100%; height: 100%; object-fit: contain; }
+  .home::after {
+    content: "home"; position: absolute; left: 50%; top: 58px;
+    transform: translateX(-50%); font-size: 11px;
+    color: var(--muted); white-space: nowrap;
+  }
+  header { padding: 96px 24px 28px; text-align: center; }
+  header .icon { width: 72px; height: 72px; margin: 0 auto; }
+  header .icon img { width: 100%; height: 100%; object-fit: contain; }
+  header h1 { margin: 14px 0 0; font-size: 34px; color: var(--ink); line-height: 1.25; }
+  main { max-width: 600px; margin: 0 auto; padding: 12px 24px 96px; }
+  main img { max-width: 100%; border-radius: 12px; }
+  a { color: var(--ink); }
+
+  .tagline {
+    font-size: 22px; font-style: italic;
+    text-align: center; margin: 0 0 32px; color: var(--muted);
+  }
+  main p { margin: 0 0 16px; font-size: 17px; }
+  .wink { color: var(--muted); font-style: italic; }
+
+  .contact {
+    margin-top: 44px; padding-top: 24px;
+    border-top: 1px solid #00000014;
+    font-size: 15px;
+  }
+  .contact h2 {
+    font-size: 14px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .contact ul { list-style: none; margin: 0; padding: 0; }
+  .contact li { margin: 0 0 6px; }
+  .contact .label { color: var(--muted); display: inline-block; min-width: 90px; }
+</style>
+</head>
+<body>
+
+<a class="home" href="index.html" aria-label="Back to the microwave">
+  <img src="img/home.png" alt="home">
+</a>
+
+<header>
+  <div class="icon"><img src="img/microwave-off.png" alt=""></div>
+  <h1>I make warm versions of cold tools.</h1>
+</header>
+
+<main>
+  <p class="tagline">Do you wanna get to know me?</p>
+
+  <p>Same!! let's chat and be friends :&gt;</p>
+
+  <p>
+    Here's the thing — I don't care about numbers. How much you or your family earns,
+    what schools you went to, where you live, your height, your weight (lol). I wanna
+    know your name, your hobbies, the things you love and the things you can't stand.
+    I love listening to stories. 
+  </p>
+
+  <p>
+    And it feels unfair that I'm the only one sharing here. So if you wanna know about
+    me — come talk to me. <span class="wink">that's the deal :)</span>
+  </p>
+
+  <div class="contact">
+    <h2>contact</h2>
+    <ul>
+      <li><span class="label">Instagram</span> <a href="https://www.instagram.com/yeons.jib/">@yeons.jib</a></li>
+      <li><span class="label">Email</span> <a href="mailto:yeons.jib@gmail.com">yeons.jib@gmail.com</a></li>
+    </ul>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ant</title>
+<style>
+  :root {
+    --bg: #fdfbf7;       /* same beige-white as the hub */
+    --ink: #2b2b2b;
+    --muted: #00000066;
+    /* ant / burrow accents — used sparingly */
+    --soil: #6b4a2e;
+    --soil-soft: #a67c52;
+    --grass: #5e7741;
+    --cream-card: #faf6ef;
+    --line: #00000014;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-rounded, "Apple SD Gothic Neo", sans-serif;
+    line-height: 1.6;
+    /* custom cursor — add img/cursor.png later; falls back to auto if missing */
+    cursor: url('img/cursor.png') 4 4, auto;
+  }
+  /* return-to-hub: only exit is back through the microwave */
+  .home {
+    position: fixed; top: 22px; left: 22px;
+    width: 56px; height: 56px;
+    display: grid; place-items: center;
+    text-decoration: none;
+    transition: transform .2s ease; z-index: 10;
+  }
+  .home { cursor: url('img/cursor.png') 4 4, pointer; }
+  .home:hover { transform: scale(1.08); }
+  .home img { width: 100%; height: 100%; object-fit: contain; }
+  .home::after {
+    content: "home"; position: absolute; left: 50%; top: 58px;
+    transform: translateX(-50%); font-size: 11px;
+    color: var(--muted); white-space: nowrap;
+  }
+  header { padding: 96px 24px 8px; text-align: center; }
+  header .icon { width: 72px; height: 72px; margin: 0 auto; }
+  header .icon img { width: 100%; height: 100%; object-fit: contain; }
+  header h1 { margin: 14px 0 0; font-size: 36px; color: var(--ink); }
+  header .romanized { margin: 6px 0 0; font-size: 14px; color: var(--soil-soft); font-style: italic; }
+  header .tagline { margin: 14px auto 0; max-width: 460px; font-size: 17px; color: var(--ink); }
+  header .meta { margin: 18px 0 0; font-size: 12.5px; color: var(--muted); letter-spacing: .02em; }
+
+  /* live demo button */
+  .demo-row { margin: 26px 0 0; }
+  .demo-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px; border-radius: 999px;
+    background: var(--soil); color: #fff; text-decoration: none;
+    font-size: 14.5px; font-weight: 600;
+    box-shadow: 0 3px 0 #00000018;
+    transition: transform .18s ease, box-shadow .18s ease;
+    cursor: url('img/cursor.png') 4 4, pointer;
+  }
+  .demo-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 0 #00000018; }
+  .demo-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 #00000018; }
+  .demo-btn .dot { width: 7px; height: 7px; border-radius: 50%; background: #9fe08a; box-shadow: 0 0 0 3px #ffffff33; }
+
+  main { max-width: 720px; margin: 0 auto; padding: 40px 24px 120px; }
+
+  /* sections */
+  .sec { margin: 0 0 54px; }
+  .eyebrow {
+    display: inline-block; font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--soil-soft);
+    margin: 0 0 6px;
+  }
+  .sec h2 { margin: 0 0 14px; font-size: 24px; color: var(--soil); }
+  .sec h3 { margin: 26px 0 6px; font-size: 17px; color: var(--ink); }
+  .sec p { margin: 0 0 14px; font-size: 16px; }
+  .sec p .em { font-style: italic; }
+  .sec p strong { font-weight: 700; }
+  .sec ul { margin: 0 0 14px; padding-left: 20px; }
+  .sec li { margin: 0 0 8px; font-size: 16px; }
+
+  /* callout — soil left-border card */
+  .callout {
+    background: var(--cream-card);
+    border-left: 4px solid var(--soil);
+    border-radius: 10px;
+    padding: 16px 18px; margin: 0 0 14px;
+    font-size: 15.5px;
+  }
+  .callout .label {
+    display: block; font-size: 11px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--soil); font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .callout.warn { border-left-color: #b3492f; }
+  .callout.warn .label { color: #b3492f; }
+
+/* design-decision toggle: tried → chose */
+  .choice { margin: 0 0 14px; }
+  .choice .verdict {
+    display: inline-block; font-size: 12px; font-weight: 700;
+    letter-spacing: .04em; padding: 2px 9px; border-radius: 999px;
+    margin-right: 8px; vertical-align: 2px;
+  }
+  .choice .kept { background: #e7efd9; color: var(--grass); }
+  .choice .cut  { background: #f0e3dd; color: #b3492f; }
+
+  /* image placeholder boxes */
+  .placeholder {
+    border: 2px dashed #00000022;
+    border-radius: 16px; padding: 40px 24px;
+    text-align: center; color: var(--muted);
+    background: #ffffff66; font-size: 14px;
+    margin: 0 0 14px;
+  }
+  .placeholder::before { content: "🐜  "; }
+  main img { max-width: 100%; border-radius: 12px; }
+  a { color: var(--soil); }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px; background: #00000010; padding: 1px 5px; border-radius: 5px;
+  }
+
+  /* divider */
+  .rule { height: 1px; background: var(--line); border: 0; margin: 0 0 46px; }
+
+  /* closer */
+  .closer {
+    text-align: center; color: var(--soil); font-style: italic;
+    font-size: 16px; padding: 18px 0 0; border-top: 1px solid var(--line);
+  }
+
+  /* scroll fade-in */
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<a class="home" href="index.html" aria-label="Back to the microwave">
+  <img src="img/home.png" alt="home">
+</a>
+
+<header>
+  <div class="icon"><img src="img/ant.png" alt=""></div>
+  <h1>개미는 뚠뚠</h1>
+  <p class="romanized">Gaemi-neun Ttwun-ttwun — “Ant Grind”</p>
+  <p class="tagline">A grid-based project tracker that feels like something, for people who find Notion cold.</p>
+  <p class="meta">Solo design + build · Single-file PWA · Firebase (Firestore + Google Auth)</p>
+  <div class="demo-row">
+    <!-- swap href for your live URL once security rules are confirmed -->
+    <a class="demo-btn" href="https://ja772-code.github.io/ant-todo/" target="_blank" rel="noopener">
+      <span class="dot"></span> Open the live app
+    </a>
+  </div>
+</header>
+
+<main>
+
+  <section class="sec reveal">
+    <span class="eyebrow">Overview</span>
+    <h2>One grid, everything at once</h2>
+    <p>개미는 뚠뚠 started from one small frustration: most planners let you see <span class="em">what's due on a given day</span>, but never let you see <span class="em">everything at once</span>. I wanted the bird's-eye view — every project, every date, in one grid I could scan in a second.</p>
+    <p>So it's a spreadsheet-style grid at heart: rows are dates, columns are projects, and each cell is a square you paint with color. But a bare grid is a cold tool, and cold tools are a crowded, forgettable category. The real work was giving a sterile utility a warm identity — an ant carrying its work from room to room of its burrow, one project at a time.</p>
+    <div class="callout">
+      <span class="label">Role &amp; stack</span>
+      <strong>Role</strong> — everything: research, concept, visual design, and front-to-back development.<br>
+      <strong>Stack</strong> — vanilla HTML/CSS/JS in a single file, packaged as a PWA. Firebase for Firestore sync and Google sign-in, localStorage for offline caching. No frameworks. Illustration in Adobe Illustrator.
+    </div>
+  </section>
+
+  <hr class="rule reveal">
+
+  <section class="sec reveal">
+    <span class="eyebrow">Research</span>
+    <h2>Two shapes, one blind spot</h2>
+    <p>Before building anything, I lived inside the existing options — spreadsheets, Notion, Google Sheets, Todomate, and a long list of scheduling tools.</p>
+    <p>They split cleanly into two shapes: <strong>calendars</strong> and <strong>to-do lists</strong>. Both share the same blind spot. A calendar shows one day's tasks well, but you can't hold many parallel projects in your head at once. A plain to-do list felt stiff, rigid, joyless. Nothing gave me the wide overview I wanted, or made me want to come back.</p>
+    <div class="callout">
+      <span class="label">Insight</span>
+      The gap wasn't features — it was <strong>overview + warmth</strong>. Everything functional already existed; nothing felt like anything.
+    </div>
+  </section>
+
+  <hr class="rule reveal">
+
+  <section class="sec reveal">
+    <span class="eyebrow">Ideation</span>
+    <h2>Why an ant?</h2>
+    <p>The theme came before the polish, and from two places at once.</p>
+    <h3>The fable</h3>
+    <p>Aesop's “The Ant and the Grasshopper” — the ant who works steadily while the grasshopper plays. The grid I was imagining was, fundamentally, about doing the work day after day, so the steady, unglamorous ant felt like the right face for it.</p>
+    <h3>The song</h3>
+    <p>The <a href="https://www.youtube.com/watch?v=pbQQUFo3cxw" target="_blank" rel="noopener">개미송</a> — the ant song from <span class="em">짱구는 못말려</span> (Crayon Shin-chan), about an ant who sweats through each day for the sake of getting by. As a kid it was a silly tune; as a modern Korean adult working through an uncertain world, it lands differently — earnest, a little funny, quietly moving. That tone is exactly what I wanted the app to feel like.</p>
+    <div class="callout">
+      <span class="label">The metaphor</span>
+      One ant runs a whole burrow. Each <span class="em">room</span> is one project; the ant carries its load from room to room. That's the grid — each column a room, each painted cell a day's work hauled in. The metaphor isn't decoration, it's the structure.
+    </div>
+  </section>
+
+  <hr class="rule reveal">
+
+  <section class="sec reveal">
+    <span class="eyebrow">Concept &amp; prototyping</span>
+    <h2>The shape I already trusted</h2>
+    <p>The format isn't new to me. In high school, a graduating senior shared a Google Sheets planner template for the underclassmen — rows as dates, columns as subjects. I was taking six IB subjects whose deadlines constantly overlapped, so I filled it in for my own subjects and lived in it all term, seeing the whole semester at a glance and staying ahead of the pile-ups.</p>
+    <p>Credit where it's due — the grid format came from that senior's template. What's mine is everything thematic and technical here: the ant world, the painting interactions, the data model, the build. The first prototype was almost literally that old spreadsheet. The skeleton is deliberately simple, because the idea is simple. The hard part was never the structure.</p>
+    <div class="callout">
+      <span class="label">The real design problem</span>
+      A project/date grid is a crowded category. On pure function it's nearly impossible to stand out — so <strong>thematic narrative and emotional connection became the actual product</strong>, not a coat of paint on top of one.
+    </div>
+    <img src="img/earlyprototype.png" alt="early Google Sheets prototype vs. current app">
+  </section>
+
+  <hr class="rule reveal">
+
+ <section class="sec reveal">
+    <span class="eyebrow">Design decisions</span>
+    <h2>Tried, then chose</h2>
+    <p>Most of the design work was deciding what <span class="em">not</span> to do. A few of the choices that shaped how it looks and feels:</p>
+
+    <div class="choice">
+      <span class="verdict cut">tried → cut</span>
+      <strong>Rounded grid cells.</strong> I tested softening the squares, but rounded corners read as “app UI” and pulled away from the soil-and-burrow feeling. Sharp cells look more like packed earth, so they stayed.
+    </div>
+
+    <div class="choice">
+      <span class="verdict kept">kept</span>
+      <strong>The screen as a burrow.</strong> The layout is split by metaphor, not just by function: the title area up top is the <span class="em">grass</span>, and the grid below is the <span class="em">개미집</span> — the burrow the ant works through. The structure of the page <span class="em">is</span> the theme.
+    </div>
+
+    <div class="choice">
+      <span class="verdict cut">tried → cut</span>
+      <strong>An ant in the empty space.</strong> I thought about dropping a little ant into the blank corners to fill them. It was cute for a second, then it was clutter. Empty space doing nothing is better than decoration doing too much.
+    </div>
+    
+    <div class="choice">
+      <span class="verdict kept">kept</span>
+      <strong>An earthy base palette.</strong> Warm soil tones and cream as the default — grounded, calm, unmistakably <span class="em">this</span> app and not a generic tracker. The logo carries the same restraint.
+    </div>
+
+   <h3>The logo</h3>
+    <p>The logo and the app icon are the same mark. The first attempts tried to combine the whole identity at once — the song, a dancing pose, the ant all together. I sketched note clusters, a dancing ant, a handful of icon variations. None of it looked good; combined, it was busy rather than charming.</p>
+ <img src="img/icondraft.png">
+
+    <p><p>So I dropped the song and the dance and kept the one image that carried everything: <strong>an ant emerging from its burrow</strong> — and then spent the rest of the time taking things <span class="em">out</span>. I tried a full grassy background, then pulled it back to a plain one. I added a pebble, then a second ant, and reworked the burrow's shadow to sit right — which pushed me to three colors. But the extra color split the focus, so I simplified back down.</p>
+    <img src="img/icondraft2.png" style="width:70%"">
+     <p>The bottom row was my final shortlist. In the end I went with the version in the top-left — the cleanest read of one ant, one burrow. Because it's an app icon that has to work at 180×180 on a home screen, that restraint isn't a style choice, it's the only thing that reads.</p>
+  <hr class="rule reveal">
+
+  <section class="sec reveal">
+    <span class="eyebrow">Engineering &amp; testing</span>
+    <h2>One file, swappable sync</h2>
+    <p>The whole app lives in a single HTML file — portable, and simple to reason about. Firebase is isolated to its own storage layer, so the sync logic is swappable and doesn't leak into the rest of the code. localStorage sits underneath as an offline cache, so the board keeps working with no connection and reconciles when it returns.</p>
+
+    <h3>Built and working</h3>
+    <ul>
+      <li>Firebase with Google sign-in for cross-device sync — each board lives at <code>boards/{userId}</code>, locked so a signed-in user can only read and write their own</li>
+      <li>Painting: pick a color and tap to fill, drag to paint a range, or erase; shift-click for a rectangular selection with copy / paste / clear</li>
+      <li>Keyboard shortcuts — copy <code>Ctrl/Cmd+C</code>, paste <code>Ctrl/Cmd+V</code>, clear <code>Delete</code>, deselect <code>Esc</code>, undo <code>Ctrl/Cmd+Z</code></li>
+      <li>Routines: auto-fill a project's cell on chosen weekdays (e.g. every Monday → "eggs"), stored apart from hand-typed text so editing one never touches the other</li>
+      <li>Per-line checkboxes, a custom palette (add, recolor, reorder, label), drag-to-reorder columns, night mode, and a 40-step undo stack</li>
+    </ul>
+
+    <h3>How it's built</h3>
+    <ul>
+      <li><strong>PWA over an app store.</strong> Installable to the home screen on iOS, Android, and desktop, with offline support via a service worker — no store fees, review, or Mac build step.</li>
+      <li><strong>Adaptive from one codebase.</strong> Desktop shows labeled buttons; mobile collapses the header to icons and scales the grass banner — all from the same file, themed with CSS variables for light and dark.</li>
+      <li><strong>Sync is convenience, backup is the safety net.</strong> Access is enforced by Firestore rules; data safety is covered by JSON export/import plus a monthly backup reminder.</li>
+    </ul>
+
+    <h3>Testing &amp; bugs resolved</h3>
+    <p>The hardest bug was in sync. Firebase coalesced rapid writes, so my original write-counter under-counted and one device quietly stopped receiving the other's updates. I replaced it with a per-device <code>clientId</code> plus a <code>lastWriter</code> field — self-correcting, and it never drifts.</p>
+
+    <h3>Known trade-off</h3>
+    <p>Sync is last-write-wins: if the same cell is edited on two devices at once, the later save wins. Fine for a single-user tool — and called out here deliberately rather than hidden.</p>
+    <p>Icon, illustration, and grass-header assets are being finalized in Illustrator.</p>
+  </section>
+
+  <hr class="rule reveal">
+
+  <section class="sec reveal">
+    <span class="eyebrow">Positioning &amp; launch</span>
+    <h2>A tracker that feels like something</h2>
+    <p>Every competitor here is sterile and corporate. So the goal was never “a better tracker.” It was <strong>“a tracker that feels like something, for people who find Notion cold.”</strong> The differentiation is emotional, not functional — and for a crowded utility, that's the only kind that holds.</p>
+    <p>The plan is a free, polished release. A free app gets real users and feedback, builds a live portfolio link, and lets me learn the full pipeline on a project where the stakes are low. </p>
+  </section>
+
+  <hr class="rule reveal">
+
+ <section class="sec reveal">
+    <span class="eyebrow">Results</span>
+    <h2>Not shipped yet</h2>
+    <p>You can be one of the first to use it!</p>
+    <div class="placeholder">
+      <a class="ghost-btn" href="https://forms.gle/hVjEP8zBAok4GvAn8" target="_blank" rel="noopener">Leave feedback ↗</a>
+    </div>
+  </section>
+
+  <hr class="rule reveal">
+
+ <section class="sec reveal">
+    <span class="eyebrow">Reflection</span>
+    <h2>What I learned, what's next</h2>
+    <p>This was my first coding project taken all the way by myself — I learned, more or less, everything it takes to turn an idea into a real, usable product. The whole point was to just <span class="em">go for it</span> and leave my perfectionism behind, and I did. It started as something only I would use. Somewhere along the way I wanted to share it — that's why it's free. There's something I love about a personal tool of mine quietly becoming someone else's personal tool. I want to keep making things like this.</p>
+    <p>Big shout-out to all the ants working hard, day and night, all around the world!!  🐜</p>
+    <p class="closer">2026.06.29</p>
+  </section>
+
+</main>
+
+<script>
+  // scroll fade-in
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+</script>
+</body>
+</html>
