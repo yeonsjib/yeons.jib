@@ -34,6 +34,15 @@
     --mw-width: 300px;
   }
 
+@media (max-width: 600px) {
+  :root {
+    --mw-width: 190px;       /* was 300px */
+    --float-distance: 12px;  /* smaller bob so it's not too jumpy */
+  }
+  .object { width: 68px; height: 68px; }   /* was 96px */
+  .tagline { font-size: 14px; }
+}
+
   * { box-sizing: border-box; }
 
   body {
@@ -242,6 +251,8 @@
     <span class="mw-status" id="mwStatus"></span>
     <span class="mw-label">about me</span>
   </div>
+   
+  <div class="tagline">microwaving your page...</div>
 
   <!-- 4 floating objects (About removed; it's the microwave now) -->
    <!--
